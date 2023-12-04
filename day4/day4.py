@@ -50,7 +50,7 @@ def process_data_2(data:list)->int:
     max = len(loc)
     total = 0
     count_cards = {}
-    for init in range(1,194):
+    for init in range(1,max+1):
         count_cards[init] = 1
     #print(loc)
     for k, v in loc.items():
