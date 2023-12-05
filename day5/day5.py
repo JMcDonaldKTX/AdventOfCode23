@@ -35,7 +35,7 @@ def map_seeds(data:list)-> Tuple[list, dict]:
                 seed_list_1.append(int(item.group()))
             #may not need the full seed list 2 since that would be computationally expensive
             for s in range(0, len(seed_list_1), 2):
-                seed_list_2.append((seed_list_1[s], seed_list_1[s+1]))
+                seed_list_2.append((seed_list_1[s], seed_list_1[s]+seed_list_1[s+1]))
         else:
             try:
                 if row[0].isalpha():
@@ -133,6 +133,7 @@ def process_data_2(data:list)->int:
                 else:
                     next_s.append((seed, max_seed))
         seeds = next_s
+    print(seeds)
     return(min(seeds)[0])
     # for s in range(0, len(seeds), 2):
     #     cur_val = seeds[s]
