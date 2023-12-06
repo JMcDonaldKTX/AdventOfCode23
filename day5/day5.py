@@ -2,7 +2,7 @@
 import re
 import os
 import sys
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 
 # template and util functions (loc and time_run) from Landcruiser87
@@ -68,31 +68,39 @@ def lookup(mapping: np.array, val: int)->int:
     return val
     return 0
 
-def lookup_2(mapping: np.array, val, seed: int, max_seed:int)->int:
+def lookup_2(mapping:List[list],seeds:List[Tuple[int, int]])->List[Tuple[int, int]]:
     # need to handle when the max seed exceeds the range of seeds, set seed to seed + range, then loop back until it doesn't and search again
-    pot_max = val
-    seed = seed
-    mapping = mapping[mapping[:,1].argsort()]
-    cur_mins = []
-    for x in mapping:
-        for d, s, r in x:
-            max_n = max(seed, s)
-            min_n = min(pot_max, s + r)
-            if max_n < min_n:
-                cur_mins.append(max_n - s + d, min_n - s + d)
-                #if max_n > seed:
-                        
-                
-    #     #print(f'seed: {seed}, max_seed: {max_seed}, x: {x}')
-    #     if (seed >= x[1] and seed <= (x[1] + x[2])) and (max_seed >= x[1] and max_seed <= (x[1] + x[2])):
-    #         return (x[0] + (seed - x[1]))
-    #     elif (seed >= x[1] and seed <= (x[1] + x[2])):
-            
-    #         seed = (x[1] + x[2]) + 1
-    #         continue
-    # #print('returning seed')            
-    return seed
-    #return 0
+    last_seed = False
+    final_seeds = []
+
+    imp_seeds = []
+    for dest, source, range in mapping:
+        dest_to_source = dest - source
+        max_seed = source + range
+        seeds_left = []
+        try:
+            for begin, end in seeds:
+                if source <= begin < end <= max_seed:
+                    final_seeds.append((begin + dest_to_source, end + dest_to_source))
+                elif begin < source < end <= max_seed:
+                    seeds_left.append((begin, source))
+                    final_seeds.append((source + dest_to_source, end + dest_to_source))
+                elif source <= begin < max_seed < end:
+                    seeds_left.append((max_seed, end))
+                    final_seeds.append((begin + dest_to_source, max_seed + dest_to_source))
+                elif begin < source <= max_seed < end:
+                    seeds_left.append((begin, source))
+                    seeds_left.append((max_seed, end))
+                    final_seeds.append((source + dest_to_source, max_seed + dest_to_source))
+                else: #if the seed didn't fit in anywhere....a bad seed
+                    seeds_left.append((begin, end))
+                #print(seeds_left)
+        except: #get an error when the seeds are empty though I'm not sure why the error that is throw is thrown...but og well
+            seeds = seeds_left
+    final_seeds.extend(seeds_left)
+    return final_seeds
+
+
 
 def process_data(data:list)->int:
     seeds, map = map_seeds(data)
@@ -109,61 +117,27 @@ def process_data(data:list)->int:
     return min_val
 
 def process_data_2(data:list)->int:
+    #returns a list of seeds and max_seeds, and a dict of catergories with the mappings contained
     seed_list, mappings = map_seeds(data)
-    #min_val = 10000000000000000000000000000000000000000000000000000000000000000000000000000000 #just a big number to go for min ...and don't wanna do an if == 0
-    #print(seeds[1])
-    seeds = seed_list[1]
-    seeds.reverse()
-    for k,v in mappings.items():
-        cur_cat = mappings[k]
-        next_s = []
-        print(seeds[0])
-        while len(seeds) > 0:
-            seed, max_seed = seeds.pop()
-            for d, s, r in cur_cat:
-                max_s = max(seed, s)
-                min_max = min(max_seed, s + r)
-                if max_s < min_max:
-                    next_s.append((max_s - s + d, min_max - s + d))
-                    if max_s > seed:
-                        seeds.append((seed, max_s))
-                    if max_seed > min_max:
-                        seeds.append((min_max, max_seed))   
-                    break
-                else:
-                    next_s.append((seed, max_seed))
-        seeds = next_s
-    print(seeds)
-    return(min(seeds)[0])
-    # for s in range(0, len(seeds), 2):
-    #     cur_val = seeds[s]
-    #     max_seed = cur_val + seeds[s+1]
-    #     #print(f'{cur_val}   {max_seed}')
-    #     for k,v in mapping.items():
-    #         cur_val = lookup_2(mapping[k], cur_val, seeds[s], max_seed) #sends the 
-    #         print(cur_val)
-    #     min_val = min(min_val, cur_val)
-    
-    # for k,v in mapping.items():
-    #     print(k)
-    #     print(v)
-    return min_val
-
-
+    last_seed = False
+    #print(seed_list[1])
+    for k, v in mappings.items():
+        seed_list[1] = lookup_2(v, seed_list[1])
+    return(min(seed_list[1])[0])
 
 
 @log_time
 def run_part_A()->int:
     data = data_load('day5test.txt')
-    games = process_data(data)
-    return games
+    min_loc = process_data(data)
+    return min_loc
 
 
 @log_time
 def run_part_B():
-    data = data_load('day5test.txt')
-    power = process_data_2(data)
-    return power
+    data = data_load('day5.txt')
+    min_loc = process_data_2(data)
+    return min_loc
     
 print(f"Part A solution: \n{run_part_A()}\n")
 print(f"Part B solution: \n{run_part_B()}\n")
