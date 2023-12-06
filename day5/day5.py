@@ -95,6 +95,7 @@ def lookup_2(mapping:List[list],seeds:List[Tuple[int, int]])->List[Tuple[int, in
                 else: #if the seed didn't fit in anywhere....a bad seed
                     seeds_left.append((begin, end))
                 #print(seeds_left)
+            seeds = seeds_left #forgot to appends the seeds left after each iteration rather than only at the end...dumb mistake...
         except: #get an error when the seeds are empty though I'm not sure why the error that is throw is thrown...but og well
             seeds = seeds_left
     final_seeds.extend(seeds_left)
@@ -122,13 +123,17 @@ def process_data_2(data:list)->int:
     last_seed = False
     #print(seed_list[1])
     for k, v in mappings.items():
+        #print(k)
         seed_list[1] = lookup_2(v, seed_list[1])
+        #print(seed_list[1])
+        #print(min(seed_list[1])[0])
+        #print(min(seed_list[1])[1])
     return(min(seed_list[1])[0])
 
 
 @log_time
 def run_part_A()->int:
-    data = data_load('day5test.txt')
+    data = data_load('day5.txt')
     min_loc = process_data(data)
     return min_loc
 
